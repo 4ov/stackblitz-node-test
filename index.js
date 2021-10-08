@@ -1,11 +1,25 @@
-// run `node index.js` in the terminal
+const http = require('http');
+const static = require('node-static');
+const port = 80;
 
-const createServer = require('http').createServer;
+const fileServer = new static.Server('./public');
+const requestHandler = (request, response) => {
+    console.log(request.url);
+    request.addListener('end', function () {
+        fileServer.serve(request, response, function (e, res) {
+            if (e && (e.status === 404)) { // If the file wasn't found
+                 fileServer.serveFile('/404.html', 404, {}, request, response);
+            }
+        });
+    }).resume();
+}
 
-// console.log(`Hello Node.js v${process.versions.node}!`);
+const server = http.createServer(requestHandler)
 
-console.log(
-  createServer((req, res) => {
-    res.end('o');
-  }).listen(3000)
-);
+server.listen(port, (err) => {
+    if (err) {
+        return console.log('something bad happened', err);
+    }
+
+    console.log(`server is listening on ${port}`);
+});
